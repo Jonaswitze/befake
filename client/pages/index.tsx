@@ -1,11 +1,9 @@
 import Head from 'next/head'
 import { Inter } from 'next/font/google'
-import styles from '@/styles/Home.module.css'
 import Image from 'next/image'
 import s from './index.module.scss'
 import axios from "axios";
 import { useState } from 'react';
-import { generateDeviceId } from '@/utils/device'
 import PhoneInput from 'react-phone-input-2';
 import "react-phone-input-2/lib/bootstrap.css";
 import { useRouter } from 'next/router'
@@ -37,7 +35,7 @@ export default function Home() {
 	}
 
 	function helpme() {
-		setHelp("Failed with Vonage login provider, re-trying to login with Firebase...");
+		setHelp("Failed with Firebase login provider, re-trying to login with Vonage...");
 		setTimeout(() => {setHelp("");}, 4000);
 	}
 
@@ -56,8 +54,9 @@ export default function Home() {
 		let response = axios.request(options).then(
 			async (response) => {
 				console.log(response.data);
-				localStorage.setItem("token", response.data.token);
-				localStorage.setItem("refresh_token", response.data.refresh_token);
+				localStorage.setItem("token", response.data.bereal_access_token);
+				localStorage.setItem("firebase_refresh_token", response.data.firebase_refresh_token);
+				localStorage.setItem("firebase_id_token", response.data.firebase_id_token)
 				localStorage.setItem("expiration", response.data.expiration)
 				localStorage.setItem("uid", response.data.uid);
 				localStorage.setItem("is_new_user", response.data.is_new_user);
@@ -81,14 +80,14 @@ export default function Home() {
 			data: body,
 		}
 
-		let response = axios.request(options).then(
+		axios.request(options).then(
 			(response) => {
 				let rvonageid = response.data.vonageRequestId;
 				console.log(response.data);
 				setVonageid(rvonageid);
 				setRequestedOtp(true);
 			}
-		).catch((error) => {failure(JSON.stringify(error.response.data.error)); helpme(); requestOTPFirebase(number);})
+		).catch((error) => {failure("VONAGE REQUEST ERROR: " + JSON.stringify(error.response.data.error));})
 	}
 
 	async function verifyOTPFirebase(otp: string) {
@@ -105,8 +104,9 @@ export default function Home() {
 		let response = axios.request(options).then(
 			async (response) => {
 				console.log(response.data);
-				localStorage.setItem("token", response.data.token);
-				localStorage.setItem("refresh_token", response.data.refresh_token);
+				localStorage.setItem("token", response.data.bereal_access_token);
+				localStorage.setItem("firebase_refresh_token", response.data.firebase_refresh_token);
+				localStorage.setItem("firebase_id_token", response.data.firebase_id_token)
 				localStorage.setItem("expiration", response.data.expiration)
 				localStorage.setItem("uid", response.data.uid);
 				localStorage.setItem("is_new_user", response.data.is_new_user);
@@ -116,11 +116,10 @@ export default function Home() {
 			}
 		).catch((error) => {
 			if (error.response) {
-				failure(error.response.data.error)
+				failure("FIREBASE VERIFY ERROR: " + error.response.data.error)
 			}else {
-				failure("unknown error, please try re-logging in")
+				failure("FIREBASE VERIFY ERROR: " + "unknown error, please try re-logging in")
 			}
-			
 		})
 	}
 
@@ -146,7 +145,9 @@ export default function Home() {
 			}
 		).catch(
 			(error) => {
-				console.log(error.response);
+				failure("FIREBASE OTP REQUEST ERROR:" + JSON.stringify(error));
+				helpme();
+				requestOTPVonage(number);
 			}
 		)
 	}
@@ -174,7 +175,7 @@ export default function Home() {
 								buttonClass={s.button}
 								containerClass={s.cont}
 							/>
-							<button className={s.send} onClick={() => requestOTPVonage(inputNumber)}>
+							<button className={s.send} onClick={() => requestOTPFirebase(inputNumber)}>
 								send
 							</button>
 						</div>
@@ -210,8 +211,7 @@ export default function Home() {
 				</div>
 			</div>
 			<div className={s.info}>
-				<p>Posting & commenting have been fixed!</p>
-				<p>TooFake is currently working (I think??) but needs <span>your help!!!</span></p>
+				<p>TooFake is currently working (I think??) but needs <span>your help!!</span></p>
 				<p>BeReal continues to beef up its security making it much harder to reverse engineer. If you are well versed in reverse engineering, please check out the <a href="https://github.com/s-alad/toofake"><FontAwesomeIcon icon={faGithub} /> github</a> and help us keep the befake project working!</p>
 				{/* <p>You can login using your phone number, view bereals and post custom images.</p>
 				<p>Please report any bugs or issues on the <a href="https://github.com/s-alad/toofake"><FontAwesomeIcon icon={faGithub} /> github</a> theres probably a bunch!</p>

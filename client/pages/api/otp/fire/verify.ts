@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import axios from 'axios';
-import { generateDeviceId } from '@/utils/device';
 import { GAPIKEY, PROXY } from '@/utils/constants';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -106,10 +105,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log('---------------------')
 
     res.status(200).json({ 
-        token: access_token, 
-        refresh_token: access_refresh_token,
+        bereal_access_token: access_token, 
+        firebase_refresh_token: firebase_refresh_token,
+        firebase_id_token: firebase_token,
         token_type: access_token_type,
-        expiration: access_expiration,
+        expiration: firebase_expiration,
         uid: uid, 
         is_new_user: is_new_user 
     });
@@ -129,7 +129,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             error_message = error.toString();
         }
         console.log(error_message);
-        res.status(400).json({ error: error_message });
+        res.status(400).json({ error: error_message, full_error: error });
     }
 
 }
